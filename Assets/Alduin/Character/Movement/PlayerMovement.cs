@@ -4,19 +4,39 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
+    [Tooltip("Base movement speed when walking.")]
     [SerializeField, Range(1f, 20f)]  private float walkSpeed          = 5f;
+
+    [Tooltip("Movement speed when sprinting.")]
     [SerializeField, Range(1f, 30f)]  private float sprintSpeed        = 9f;
+
+    [Tooltip("How quickly the player accelerates to target speed.")]
     [SerializeField, Range(1f, 20f)]  private float sprintAcceleration = 8f;
+
+    [Tooltip("How quickly the player decelerates to a stop when no input is given.")]
     [SerializeField, Range(1f, 20f)]  private float deceleration       = 10f;
+
+    [Tooltip("Maximum height the player reaches at the peak of a jump.")]
     [SerializeField, Range(0.1f, 5f)] private float jumpHeight         = 1.2f;
+
+    [Tooltip("How much the player can influence direction while airborne. 0 = no control, 1 = full control.")]
     [SerializeField, Range(0f, 1f)]   private float airControl         = 0.3f;
 
     [Header("Jump")]
+    [Tooltip("Grace period after leaving the ground where the player can still jump.")]
     [SerializeField, Range(0f,   0.3f)] private float coyoteTime        = 0.15f;
+
+    [Tooltip("Gravity applied to the player. Must be negative.")]
     [SerializeField, Range(-50f, -1f)]  private float gravityValue      = -25f;
+
+    [Tooltip("Gravity multiplier applied when the player is falling. Higher values mean faster fall.")]
     [SerializeField, Range(1f,   5f)]   private float fallMultiplier    = 2.5f;
+
+    [Tooltip("How much horizontal velocity is preserved when jumping. 0 = no momentum, 1 = full momentum.")]
     [SerializeField, Range(0f,   1f)]   private float jumpMomentum      = 0.5f;
-    [SerializeField, Range(0f,  10f)]   private float momentumDecaySpeed = 5f;
+
+    [Tooltip("Time in seconds for jump momentum to fully decay. Higher values = longer airtime control.")]
+    [SerializeField, Range(0.1f, 5f)] private float momentumDecayDuration = 1f;
 
     private CharacterController _controller;
     private PlayerInputs        _inputs;
@@ -103,7 +123,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleMovement()
     {
-        float targetSpeed = (_isSprinting && _moveInput != Vector2.zero)
+        float targetSpeed = (_isSprinting && _moveInput.magnitude > 0.1f)
             ? sprintSpeed
             : walkSpeed;
 
@@ -115,7 +135,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (_controller.isGrounded)
         {
-            if (_moveInput != Vector2.zero)
+            if (_moveInput.magnitude > 0.1f)
             {
                 _horizontalVelocity = Vector3.Lerp(
                     _horizontalVelocity,
@@ -134,15 +154,15 @@ public class PlayerMovement : MonoBehaviour
         {
             _currentMomentum = Mathf.MoveTowards(
                 _currentMomentum, 0f,
-                momentumDecaySpeed * Time.deltaTime);
+                (jumpMomentum / momentumDecayDuration) * Time.deltaTime);
 
-            if (_moveInput != Vector2.zero && _horizontalVelocity.magnitude > 0.01f)
+            if (_moveInput.magnitude > 0.1f && _horizontalVelocity.magnitude > 0.01f)
             {
                 float currentMagnitude = _horizontalVelocity.magnitude;
 
                 _horizontalVelocity = Vector3.Lerp(
                     _horizontalVelocity,
-                    inputDir.normalized * (currentMagnitude * jumpMomentum),
+                    inputDir.normalized * (currentMagnitude * _currentMomentum),
                     airControl);
             }
             else
