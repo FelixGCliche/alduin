@@ -45,9 +45,11 @@ public class ArmsProceduralMotion : MonoBehaviour
 
     private void Update()
     {
-        Vector3    bobOffset    = ComputeBobOffset();
-        Vector3    sprintOffset = ComputeSprintPositionOffset();
-        Quaternion sprintRot    = ComputeSprintRotation();
+        bool isMoving = _moveInput.magnitude > 0.1f;
+
+        Vector3    bobOffset    = ComputeBobOffset(isMoving);
+        Vector3    sprintOffset = ComputeSprintPositionOffset(isMoving);
+        Quaternion sprintRot    = ComputeSprintRotation(isMoving);
 
         Vector3 targetPos = _initialPosition + bobOffset + sprintOffset;
         transform.localPosition = Vector3.Lerp(
@@ -59,10 +61,8 @@ public class ArmsProceduralMotion : MonoBehaviour
             transitionSpeed * Time.deltaTime);
     }
 
-    private Vector3 ComputeBobOffset()
+    private Vector3 ComputeBobOffset(bool isMoving)
     {
-        bool isMoving = _moveInput != Vector2.zero;
-
         if (!isMoving)
         {
             _bobTimer = 0f;
@@ -80,15 +80,15 @@ public class ArmsProceduralMotion : MonoBehaviour
             0f);
     }
 
-    private Vector3 ComputeSprintPositionOffset()
+    private Vector3 ComputeSprintPositionOffset(bool isMoving)
     {
-        float targetY = _isSprinting ? -sprintDropY : 0f;
+        float targetY = (_isSprinting && isMoving) ? -sprintDropY : 0f;
         return new Vector3(0f, targetY, 0f);
     }
 
-    private Quaternion ComputeSprintRotation()
+    private Quaternion ComputeSprintRotation(bool isMoving)
     {
-        float targetTilt = _isSprinting ? -sprintTiltZ : 0f;
+        float targetTilt = (_isSprinting && isMoving) ? -sprintTiltZ : 0f;
         return Quaternion.Euler(0f, 0f, targetTilt);
     }
 }

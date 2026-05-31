@@ -36,8 +36,9 @@ public class ArmsAnimator : MonoBehaviour
 
     private void Update()
     {
+        float speed = _moveInput.magnitude;
         _animator.SetFloat(SpeedHash,    _moveInput.magnitude);
-        _animator.SetBool(IsSprintHash,  _isSprinting);
+        _animator.SetBool(IsSprintHash, _isSprinting && speed > 0.1f);
     }
 
     public void PlayFire()   => _animator.SetTrigger(FireHash);
