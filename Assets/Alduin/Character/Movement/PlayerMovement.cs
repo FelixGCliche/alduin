@@ -7,15 +7,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField, Range(1f, 20f)]  private float walkSpeed          = 5f;
     [SerializeField, Range(1f, 30f)]  private float sprintSpeed        = 9f;
     [SerializeField, Range(1f, 20f)]  private float sprintAcceleration = 8f;
+    [SerializeField, Range(1f, 20f)]  private float deceleration       = 10f;
     [SerializeField, Range(0.1f, 5f)] private float jumpHeight         = 1.2f;
     [SerializeField, Range(0f, 1f)]   private float airControl         = 0.3f;
 
     [Header("Jump")]
-    [SerializeField, Range(0f,   0.3f)] private float coyoteTime     = 0.15f;
-    [SerializeField, Range(-50f, -1f)]  private float gravityValue   = -25f;
-    [SerializeField, Range(1f,   5f)]   private float fallMultiplier = 2.5f;
-    [SerializeField, Range(0f,   1f)]   private float jumpMomentum   = 0.5f;
-    [SerializeField, Range(0f, 10f)] private float momentumDecaySpeed = 5f;
+    [SerializeField, Range(0f,   0.3f)] private float coyoteTime        = 0.15f;
+    [SerializeField, Range(-50f, -1f)]  private float gravityValue      = -25f;
+    [SerializeField, Range(1f,   5f)]   private float fallMultiplier    = 2.5f;
+    [SerializeField, Range(0f,   1f)]   private float jumpMomentum      = 0.5f;
+    [SerializeField, Range(0f,  10f)]   private float momentumDecaySpeed = 5f;
 
     private CharacterController _controller;
     private PlayerInputs        _inputs;
@@ -28,7 +29,7 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 _horizontalVelocity;
     private float   _currentSpeed;
     private float   _coyoteTimer;
-    private float _currentMomentum;
+    private float   _currentMomentum;
 
     private void Awake()
     {
@@ -86,9 +87,9 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_jumpQueued && _coyoteTimer > 0f)
         {
-            _velocity.y  = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
-            _coyoteTimer = 0f;
-            _jumpQueued  = false;
+            _velocity.y      = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
+            _coyoteTimer     = 0f;
+            _jumpQueued      = false;
             _currentMomentum = jumpMomentum;
 
             _horizontalVelocity = transform.forward * (_moveInput.y * _currentSpeed * jumpMomentum)
@@ -114,14 +115,27 @@ public class PlayerMovement : MonoBehaviour
 
         if (_controller.isGrounded)
         {
-            _horizontalVelocity = inputDir.normalized * _currentSpeed;
+            if (_moveInput != Vector2.zero)
+            {
+                _horizontalVelocity = Vector3.Lerp(
+                    _horizontalVelocity,
+                    inputDir.normalized * _currentSpeed,
+                    sprintAcceleration * Time.deltaTime);
+            }
+            else
+            {
+                _horizontalVelocity = Vector3.Lerp(
+                    _horizontalVelocity,
+                    Vector3.zero,
+                    deceleration * Time.deltaTime);
+            }
         }
         else
         {
             _currentMomentum = Mathf.MoveTowards(
                 _currentMomentum, 0f,
                 momentumDecaySpeed * Time.deltaTime);
-            
+
             if (_moveInput != Vector2.zero && _horizontalVelocity.magnitude > 0.01f)
             {
                 float currentMagnitude = _horizontalVelocity.magnitude;
