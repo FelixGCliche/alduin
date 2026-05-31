@@ -10,6 +10,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float jumpHeight         = 1.2f;
     [SerializeField] private float gravityValue       = -9.81f;
 
+    [Header("Jump")]
+    [SerializeField, Range(0f, 0.3f)] private float coyoteTime = 0.15f;
+    
     private CharacterController _controller;
     private PlayerInputs        _inputs;
 
@@ -19,6 +22,7 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 _velocity;
     private float   _currentSpeed;
+    private float _coyoteTimer;
 
     private void Awake()
     {
@@ -54,18 +58,28 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleGravity()
     {
-        if (_controller.isGrounded && _velocity.y < 0f)
-            _velocity.y = -2f;
+        if (_controller.isGrounded)
+        {
+            _coyoteTimer = coyoteTime; 
+
+            if (_velocity.y < 0f)
+                _velocity.y = -2f;
+        }
+        else
+        {
+            _coyoteTimer -= Time.deltaTime;  
+        }
 
         _velocity.y += gravityValue * Time.deltaTime;
     }
 
     private void HandleJump()
     {
-        if (_jumpQueued && _controller.isGrounded)
+        if (_jumpQueued && _coyoteTimer > 0f)
         {
-            _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
-            _jumpQueued = false;
+            _velocity.y  = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
+            _coyoteTimer = 0f; 
+            _jumpQueued  = false;
         }
         else if (_jumpQueued)
         {
