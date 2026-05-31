@@ -4,15 +4,16 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float walkSpeed          = 5f;
-    [SerializeField] private float sprintSpeed        = 9f;
-    [SerializeField] private float sprintAcceleration = 8f;
-    [SerializeField] private float jumpHeight         = 1.2f;
-    [SerializeField] private float gravityValue       = -9.81f;
+    [SerializeField, Range(1f, 20f)]  private float walkSpeed          = 5f;
+    [SerializeField, Range(1f, 30f)]  private float sprintSpeed        = 9f;
+    [SerializeField, Range(1f, 20f)]  private float sprintAcceleration = 8f;
+    [SerializeField, Range(0.1f, 5f)] private float jumpHeight         = 1.2f;
 
     [Header("Jump")]
-    [SerializeField, Range(0f, 0.3f)] private float coyoteTime = 0.15f;
-    
+    [SerializeField, Range(0f,   0.3f)]  private float coyoteTime    = 0.15f;
+    [SerializeField, Range(-50f, -1f)]   private float gravityValue  = -25f;
+    [SerializeField, Range(1f,   5f)]    private float fallMultiplier = 2.5f;
+
     private CharacterController _controller;
     private PlayerInputs        _inputs;
 
@@ -22,7 +23,7 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 _velocity;
     private float   _currentSpeed;
-    private float _coyoteTimer;
+    private float   _coyoteTimer;
 
     private void Awake()
     {
@@ -60,17 +61,20 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_controller.isGrounded)
         {
-            _coyoteTimer = coyoteTime; 
+            _coyoteTimer = coyoteTime;
 
             if (_velocity.y < 0f)
                 _velocity.y = -2f;
         }
         else
         {
-            _coyoteTimer -= Time.deltaTime;  
-        }
+            _coyoteTimer -= Time.deltaTime;
 
-        _velocity.y += gravityValue * Time.deltaTime;
+            if (_velocity.y < 0f)
+                _velocity.y += gravityValue * fallMultiplier * Time.deltaTime;
+            else
+                _velocity.y += gravityValue * Time.deltaTime;
+        }
     }
 
     private void HandleJump()
@@ -78,7 +82,7 @@ public class PlayerMovement : MonoBehaviour
         if (_jumpQueued && _coyoteTimer > 0f)
         {
             _velocity.y  = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
-            _coyoteTimer = 0f; 
+            _coyoteTimer = 0f;
             _jumpQueued  = false;
         }
         else if (_jumpQueued)
