@@ -4,12 +4,12 @@ using Unity.Cinemachine;
 public class PlayerCamera : MonoBehaviour
 {
     [Header("Sensitivity")]
-    [SerializeField] private float lookSensitivityX = 1f;
-    [SerializeField] private float lookSensitivityY = 0.8f;
+    [SerializeField, Range(0.01f, 2f)] private float lookSensitivityX = 0.1f;
+    [SerializeField, Range(0.01f, 2f)] private float lookSensitivityY = 0.08f;
 
     [Header("Clamp vertical")]
-    [SerializeField] private float topClamp    = 80f;
-    [SerializeField] private float bottomClamp = -80f;
+    [SerializeField, Range(0f, 89f)] private float topClamp    = 80f;
+    [SerializeField, Range(0f, 89f)] private float bottomClamp = 80f;
 
     private PlayerInputs _inputs;
     private Transform    _playerBody;
