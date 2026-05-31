@@ -11,9 +11,10 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField, Range(0f, 1f)]   private float airControl         = 0.3f;
 
     [Header("Jump")]
-    [SerializeField, Range(0f,   0.3f)] private float coyoteTime    = 0.15f;
-    [SerializeField, Range(-50f, -1f)]  private float gravityValue  = -25f;
+    [SerializeField, Range(0f,   0.3f)] private float coyoteTime     = 0.15f;
+    [SerializeField, Range(-50f, -1f)]  private float gravityValue   = -25f;
     [SerializeField, Range(1f,   5f)]   private float fallMultiplier = 2.5f;
+    [SerializeField, Range(0f,   1f)]   private float jumpMomentum   = 0.5f;
 
     private CharacterController _controller;
     private PlayerInputs        _inputs;
@@ -83,12 +84,12 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_jumpQueued && _coyoteTimer > 0f)
         {
-            _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
+            _velocity.y  = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
             _coyoteTimer = 0f;
             _jumpQueued  = false;
 
-            _horizontalVelocity = transform.forward * (_moveInput.y * _currentSpeed)
-                                  + transform.right   * (_moveInput.x * _currentSpeed);
+            _horizontalVelocity = transform.forward * (_moveInput.y * _currentSpeed * jumpMomentum)
+                                + transform.right   * (_moveInput.x * _currentSpeed * jumpMomentum);
         }
         else if (_jumpQueued)
         {
@@ -114,15 +115,21 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            if (_moveInput != Vector2.zero)
+            if (_moveInput != Vector2.zero && _horizontalVelocity.magnitude > 0.01f)
             {
                 float currentMagnitude = _horizontalVelocity.magnitude;
-                float targetMagnitude = Mathf.Max(currentMagnitude, _currentSpeed);
 
                 _horizontalVelocity = Vector3.Lerp(
                     _horizontalVelocity,
-                    inputDir.normalized * targetMagnitude,
+                    inputDir.normalized * (currentMagnitude * jumpMomentum),
                     airControl);
+            }
+            else
+            {
+                _horizontalVelocity = Vector3.Lerp(
+                    _horizontalVelocity,
+                    Vector3.zero,
+                    0.02f);
             }
         }
 
