@@ -32,8 +32,8 @@ public class PlayerMovement : MonoBehaviour
     [Tooltip("Gravity multiplier applied when the player is falling. Higher values mean faster fall.")]
     [SerializeField, Range(1f,   5f)]   private float fallMultiplier    = 2.5f;
 
-    [Tooltip("How much horizontal velocity is preserved when jumping. 0 = no momentum, 1 = full momentum.")]
-    [SerializeField, Range(0f,   1f)]   private float jumpMomentum      = 0.5f;
+    [Tooltip("How much horizontal velocity is preserved when jumping. 0 = no momentum, 1 = full momentum, above 1 = extra boost.")]
+    [SerializeField, Range(0f, 3f)] private float jumpMomentum = 1.2f;
 
     [Tooltip("Time in seconds for jump momentum to fully decay. Higher values = longer airtime control.")]
     [SerializeField, Range(0.1f, 5f)] private float momentumDecayDuration = 1f;
