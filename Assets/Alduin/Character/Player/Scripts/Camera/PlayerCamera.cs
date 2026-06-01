@@ -7,8 +7,10 @@ public class PlayerCamera : MonoBehaviour
     [SerializeField, Range(0.01f, 2f)] private float lookSensitivityX = 0.1f;
     [SerializeField, Range(0.01f, 2f)] private float lookSensitivityY = 0.08f;
 
-    [Header("Clamp vertical")]
+    [Tooltip("Maximum angle in degrees the player can look up.")]
     [SerializeField, Range(0f, 89f)] private float topClamp    = 80f;
+
+    [Tooltip("Maximum angle in degrees the player can look down.")]
     [SerializeField, Range(0f, 89f)] private float bottomClamp = 80f;
 
     private PlayerInputs _inputs;
@@ -40,7 +42,7 @@ public class PlayerCamera : MonoBehaviour
 
         // Pitch 
         _targetPitch -= _lookInput.y * lookSensitivityY;
-        _targetPitch  = Mathf.Clamp(_targetPitch, bottomClamp, topClamp);
+        _targetPitch = Mathf.Clamp(_targetPitch, -topClamp, bottomClamp);
 
         // Apply pitch (CameraTarget)
         transform.localRotation = Quaternion.Euler(_targetPitch, 0f, 0f);
