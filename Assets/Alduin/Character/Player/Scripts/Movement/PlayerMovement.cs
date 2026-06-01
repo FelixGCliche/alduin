@@ -24,22 +24,23 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jump")]
     [Tooltip("Grace period after leaving the ground where the player can still jump.")]
-    [SerializeField, Range(0f,   0.3f)] private float coyoteTime        = 0.15f;
+    [SerializeField, Range(0f,   0.3f)] private float coyoteTime            = 0.15f;
 
     [Tooltip("Gravity applied to the player. Must be negative.")]
-    [SerializeField, Range(-50f, -1f)]  private float gravityValue      = -25f;
+    [SerializeField, Range(-50f, -1f)]  private float gravityValue          = -25f;
 
     [Tooltip("Gravity multiplier applied when the player is falling. Higher values mean faster fall.")]
-    [SerializeField, Range(1f,   5f)]   private float fallMultiplier    = 2.5f;
+    [SerializeField, Range(1f,   5f)]   private float fallMultiplier        = 2.5f;
 
     [Tooltip("How much horizontal velocity is preserved when jumping. 0 = no momentum, 1 = full momentum, above 1 = extra boost.")]
-    [SerializeField, Range(0f, 3f)] private float jumpMomentum = 1.2f;
+    [SerializeField, Range(0f,   3f)]   private float jumpMomentum          = 1.2f;
 
     [Tooltip("Time in seconds for jump momentum to fully decay. Higher values = longer airtime control.")]
-    [SerializeField, Range(0.1f, 5f)] private float momentumDecayDuration = 1f;
+    [SerializeField, Range(0.1f, 5f)]   private float momentumDecayDuration = 1f;
 
     private CharacterController _controller;
     private PlayerInputs        _inputs;
+    private PlayerModifiers     _modifiers;
 
     private Vector2 _moveInput;
     private bool    _jumpQueued;
@@ -55,6 +56,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _controller   = GetComponent<CharacterController>();
         _inputs       = GetComponent<PlayerInputs>();
+        _modifiers    = GetComponent<PlayerModifiers>();
         _currentSpeed = walkSpeed;
     }
 
@@ -112,8 +114,8 @@ public class PlayerMovement : MonoBehaviour
             _jumpQueued      = false;
             _currentMomentum = jumpMomentum;
 
-            _horizontalVelocity = transform.forward * (_moveInput.y * _currentSpeed * jumpMomentum)
-                                + transform.right   * (_moveInput.x * _currentSpeed * jumpMomentum);
+            _horizontalVelocity = transform.forward * (_moveInput.y * _currentSpeed * jumpMomentum * _modifiers.MomentumMultiplier)
+                                + transform.right   * (_moveInput.x * _currentSpeed * jumpMomentum * _modifiers.MomentumMultiplier);
         }
         else if (_jumpQueued)
         {
@@ -124,8 +126,8 @@ public class PlayerMovement : MonoBehaviour
     private void HandleMovement()
     {
         float targetSpeed = (_isSprinting && _moveInput.magnitude > 0.1f)
-            ? sprintSpeed
-            : walkSpeed;
+            ? sprintSpeed * _modifiers.SpeedMultiplier
+            : walkSpeed   * _modifiers.SpeedMultiplier;
 
         _currentSpeed = Mathf.Lerp(_currentSpeed, targetSpeed,
             sprintAcceleration * Time.deltaTime);
