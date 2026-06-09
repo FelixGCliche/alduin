@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(PlayerInput))]
 public class PlayerInputs : MonoBehaviour
 {
     public event Action<Vector2> MoveEvent;
@@ -10,30 +9,37 @@ public class PlayerInputs : MonoBehaviour
     public event Action          JumpEvent;
     public event Action<bool>    SprintEvent;
 
-    private PlayerInput _playerInput;
+    private PlayerInputActions _actions;
 
     private void Awake()
     {
-        _playerInput = GetComponent<PlayerInput>();
-
-        _playerInput.actions["Move"].performed  += OnMove;
-        _playerInput.actions["Move"].canceled   += OnMove;
-        _playerInput.actions["Look"].performed  += OnLook;
-        _playerInput.actions["Look"].canceled   += OnLook;
-        _playerInput.actions["Jump"].performed  += OnJump;
-        _playerInput.actions["Sprint"].performed += OnSprint;
-        _playerInput.actions["Sprint"].canceled  += OnSprint;
+        _actions = new PlayerInputActions();
     }
 
-    private void OnDestroy()
+    private void OnEnable()
     {
-        _playerInput.actions["Move"].performed  -= OnMove;
-        _playerInput.actions["Move"].canceled   -= OnMove;
-        _playerInput.actions["Look"].performed  -= OnLook;
-        _playerInput.actions["Look"].canceled   -= OnLook;
-        _playerInput.actions["Jump"].performed  -= OnJump;
-        _playerInput.actions["Sprint"].performed -= OnSprint;
-        _playerInput.actions["Sprint"].canceled  -= OnSprint;
+        _actions.Enable();
+
+        _actions.Player.Move.performed  += OnMove;
+        _actions.Player.Move.canceled   += OnMove;
+        _actions.Player.Look.performed  += OnLook;
+        _actions.Player.Look.canceled   += OnLook;
+        _actions.Player.Jump.performed  += OnJump;
+        _actions.Player.Sprint.performed += OnSprint;
+        _actions.Player.Sprint.canceled  += OnSprint;
+    }
+
+    private void OnDisable()
+    {
+        _actions.Player.Move.performed  -= OnMove;
+        _actions.Player.Move.canceled   -= OnMove;
+        _actions.Player.Look.performed  -= OnLook;
+        _actions.Player.Look.canceled   -= OnLook;
+        _actions.Player.Jump.performed  -= OnJump;
+        _actions.Player.Sprint.performed -= OnSprint;
+        _actions.Player.Sprint.canceled  -= OnSprint;
+
+        _actions.Disable();
     }
 
     private void OnMove(InputAction.CallbackContext ctx)
