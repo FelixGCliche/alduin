@@ -2048,7 +2048,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fa497d3d8268cd438800fe6e482705d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  movementSO: {fileID: 11400000, guid: 26f0cf2775725a24ca5cbd1aad75a4dc, type: 2}
+  _settings: {fileID: 11400000, guid: 26f0cf2775725a24ca5cbd1aad75a4dc, type: 2}
 --- !u!1 &8514398788373241527
 GameObject:
   m_ObjectHideFlags: 0
@@ -2354,7 +2354,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bd83fbdc8989394c9d242476393443f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCamera
-  lookSensitivityX: 0.1
-  lookSensitivityY: 0.08
-  topClamp: 80
-  bottomClamp: 80
+  _settings: {fileID: 11400000, guid: ab0908c9f51264743a5d08280e770e1a, type: 2}

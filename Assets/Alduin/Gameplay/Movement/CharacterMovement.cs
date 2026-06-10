@@ -3,14 +3,10 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class CharacterMovement : MonoBehaviour
 {
-   [SerializeField] CharacterMovementSO movementSO;
+    [SerializeField] private CharacterMovementSO _settings;
 
     private CharacterController _controller;
-    private PlayerInputs        _inputs;
-
-    private Vector2 _moveInput;
-    private bool    _jumpQueued;
-    private bool    _isSprinting;
+    private IMovementInput      _input;       
 
     private Vector3 _velocity;
     private Vector3 _horizontalVelocity;
@@ -21,27 +17,9 @@ public class CharacterMovement : MonoBehaviour
     private void Awake()
     {
         _controller   = GetComponent<CharacterController>();
-        _inputs       = GetComponent<PlayerInputs>();
-        _currentSpeed = movementSO.walkSpeed;
+        _input        = GetComponent<IMovementInput>();  
+        _currentSpeed = _settings.walkSpeed;
     }
-
-    private void OnEnable()
-    {
-        _inputs.MoveEvent   += OnMove;
-        _inputs.JumpEvent   += OnJump;
-        _inputs.SprintEvent += OnSprint;
-    }
-
-    private void OnDisable()
-    {
-        _inputs.MoveEvent   -= OnMove;
-        _inputs.JumpEvent   -= OnJump;
-        _inputs.SprintEvent -= OnSprint;
-    }
-
-    private void OnMove(Vector2 input)   => _moveInput   = input;
-    private void OnJump()                => _jumpQueued  = true;
-    private void OnSprint(bool isSprint) => _isSprinting = isSprint;
 
     private void Update()
     {
@@ -54,7 +32,7 @@ public class CharacterMovement : MonoBehaviour
     {
         if (_controller.isGrounded)
         {
-            _coyoteTimer = movementSO.coyoteTime;
+            _coyoteTimer = _settings.coyoteTime;
 
             if (_velocity.y < 0f)
                 _velocity.y = -2f;
@@ -64,73 +42,68 @@ public class CharacterMovement : MonoBehaviour
             _coyoteTimer -= Time.deltaTime;
 
             if (_velocity.y < 0f)
-                _velocity.y += movementSO.gravityValue * movementSO.fallMultiplier * Time.deltaTime;
+                _velocity.y += _settings.gravityValue * _settings.fallMultiplier * Time.deltaTime;
             else
-                _velocity.y += movementSO.gravityValue * Time.deltaTime;
+                _velocity.y += _settings.gravityValue * Time.deltaTime;
         }
     }
 
     private void HandleJump()
     {
-        if (_jumpQueued && _coyoteTimer > 0f)
+        if (_input.ConsumeJump() && _coyoteTimer > 0f)
         {
-            _velocity.y      = Mathf.Sqrt(movementSO.jumpHeight * -2f * movementSO.gravityValue);
+            _velocity.y      = Mathf.Sqrt(_settings.jumpHeight * -2f * _settings.gravityValue);
             _coyoteTimer     = 0f;
-            _jumpQueued      = false;
-            _currentMomentum = movementSO.jumpMomentum;
+            _currentMomentum = _settings.jumpMomentum;
 
-            _horizontalVelocity = transform.forward * (_moveInput.y * _currentSpeed * movementSO.jumpMomentum)
-                                + transform.right   * (_moveInput.x * _currentSpeed * movementSO.jumpMomentum);
-        }
-        else if (_jumpQueued)
-        {
-            _jumpQueued = false;
+            _horizontalVelocity = transform.forward * (_input.MoveInput.y * _currentSpeed * _settings.jumpMomentum)
+                                + transform.right   * (_input.MoveInput.x * _currentSpeed * _settings.jumpMomentum);
         }
     }
 
     private void HandleMovement()
     {
-        float targetSpeed = (_isSprinting && _moveInput.magnitude > 0.1f)
-            ? movementSO.sprintSpeed
-            : movementSO.walkSpeed;
+        float targetSpeed = (_input.IsSprinting && _input.MoveInput.magnitude > 0.1f)
+            ? _settings.sprintSpeed
+            : _settings.walkSpeed;
 
         _currentSpeed = Mathf.Lerp(_currentSpeed, targetSpeed,
-            movementSO.sprintAcceleration * Time.deltaTime);
+            _settings.sprintAcceleration * Time.deltaTime);
 
-        Vector3 inputDir = transform.forward * _moveInput.y
-                         + transform.right   * _moveInput.x;
+        Vector3 inputDir = transform.forward * _input.MoveInput.y
+                         + transform.right   * _input.MoveInput.x;
 
         if (_controller.isGrounded)
         {
-            if (_moveInput.magnitude > 0.1f)
+            if (_input.MoveInput.magnitude > 0.1f)
             {
                 _horizontalVelocity = Vector3.Lerp(
                     _horizontalVelocity,
                     inputDir.normalized * _currentSpeed,
-                    movementSO.sprintAcceleration * Time.deltaTime);
+                    _settings.sprintAcceleration * Time.deltaTime);
             }
             else
             {
                 _horizontalVelocity = Vector3.Lerp(
                     _horizontalVelocity,
                     Vector3.zero,
-                    movementSO.deceleration * Time.deltaTime);
+                    _settings.deceleration * Time.deltaTime);
             }
         }
         else
         {
             _currentMomentum = Mathf.MoveTowards(
                 _currentMomentum, 0f,
-                (movementSO.jumpMomentum / movementSO.momentumDecayDuration) * Time.deltaTime);
+                (_settings.jumpMomentum / _settings.momentumDecayDuration) * Time.deltaTime);
 
-            if (_moveInput.magnitude > 0.1f && _horizontalVelocity.magnitude > 0.01f)
+            if (_input.MoveInput.magnitude > 0.1f && _horizontalVelocity.magnitude > 0.01f)
             {
                 float currentMagnitude = _horizontalVelocity.magnitude;
 
                 _horizontalVelocity = Vector3.Lerp(
                     _horizontalVelocity,
                     inputDir.normalized * (currentMagnitude * _currentMomentum),
-                    movementSO.airControl);
+                    _settings.airControl);
             }
             else
             {
