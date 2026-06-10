@@ -2048,17 +2048,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fa497d3d8268cd438800fe6e482705d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  walkSpeed: 5
-  sprintSpeed: 9
-  sprintAcceleration: 8
-  deceleration: 10
-  jumpHeight: 1.5
-  airControl: 0.1
-  coyoteTime: 0.15
-  gravityValue: -30
-  fallMultiplier: 2.5
-  jumpMomentum: 0.99
-  momentumDecayDuration: 2.5
+  movementSO: {fileID: 11400000, guid: 26f0cf2775725a24ca5cbd1aad75a4dc, type: 2}
 --- !u!1 &8514398788373241527
 GameObject:
   m_ObjectHideFlags: 0

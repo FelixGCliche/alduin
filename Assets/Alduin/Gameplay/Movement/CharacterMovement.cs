@@ -3,40 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class CharacterMovement : MonoBehaviour
 {
-    [Header("Movement")]
-    [Tooltip("Base movement speed when walking.")]
-    [SerializeField, Range(1f, 20f)]  private float walkSpeed          = 5f;
-
-    [Tooltip("Movement speed when sprinting.")]
-    [SerializeField, Range(1f, 30f)]  private float sprintSpeed        = 9f;
-
-    [Tooltip("How quickly the player accelerates to target speed.")]
-    [SerializeField, Range(1f, 20f)]  private float sprintAcceleration = 8f;
-
-    [Tooltip("How quickly the player decelerates to a stop when no input is given.")]
-    [SerializeField, Range(1f, 20f)]  private float deceleration       = 10f;
-
-    [Tooltip("Maximum height the player reaches at the peak of a jump.")]
-    [SerializeField, Range(0.1f, 5f)] private float jumpHeight         = 1.2f;
-
-    [Tooltip("How much the player can influence direction while airborne. 0 = no control, 1 = full control.")]
-    [SerializeField, Range(0f, 1f)]   private float airControl         = 0.3f;
-
-    [Header("Jump")]
-    [Tooltip("Grace period after leaving the ground where the player can still jump.")]
-    [SerializeField, Range(0f,   0.3f)] private float coyoteTime        = 0.15f;
-
-    [Tooltip("Gravity applied to the player. Must be negative.")]
-    [SerializeField, Range(-50f, -1f)]  private float gravityValue      = -25f;
-
-    [Tooltip("Gravity multiplier applied when the player is falling. Higher values mean faster fall.")]
-    [SerializeField, Range(1f,   5f)]   private float fallMultiplier    = 2.5f;
-
-    [Tooltip("How much horizontal velocity is preserved when jumping. 0 = no momentum, 1 = full momentum, above 1 = extra boost.")]
-    [SerializeField, Range(0f, 3f)] private float jumpMomentum = 1.2f;
-
-    [Tooltip("Time in seconds for jump momentum to fully decay. Higher values = longer airtime control.")]
-    [SerializeField, Range(0.1f, 5f)] private float momentumDecayDuration = 1f;
+   [SerializeField] CharacterMovementSO movementSO;
 
     private CharacterController _controller;
     private PlayerInputs        _inputs;
@@ -55,7 +22,7 @@ public class CharacterMovement : MonoBehaviour
     {
         _controller   = GetComponent<CharacterController>();
         _inputs       = GetComponent<PlayerInputs>();
-        _currentSpeed = walkSpeed;
+        _currentSpeed = movementSO.walkSpeed;
     }
 
     private void OnEnable()
@@ -87,7 +54,7 @@ public class CharacterMovement : MonoBehaviour
     {
         if (_controller.isGrounded)
         {
-            _coyoteTimer = coyoteTime;
+            _coyoteTimer = movementSO.coyoteTime;
 
             if (_velocity.y < 0f)
                 _velocity.y = -2f;
@@ -97,9 +64,9 @@ public class CharacterMovement : MonoBehaviour
             _coyoteTimer -= Time.deltaTime;
 
             if (_velocity.y < 0f)
-                _velocity.y += gravityValue * fallMultiplier * Time.deltaTime;
+                _velocity.y += movementSO.gravityValue * movementSO.fallMultiplier * Time.deltaTime;
             else
-                _velocity.y += gravityValue * Time.deltaTime;
+                _velocity.y += movementSO.gravityValue * Time.deltaTime;
         }
     }
 
@@ -107,13 +74,13 @@ public class CharacterMovement : MonoBehaviour
     {
         if (_jumpQueued && _coyoteTimer > 0f)
         {
-            _velocity.y      = Mathf.Sqrt(jumpHeight * -2f * gravityValue);
+            _velocity.y      = Mathf.Sqrt(movementSO.jumpHeight * -2f * movementSO.gravityValue);
             _coyoteTimer     = 0f;
             _jumpQueued      = false;
-            _currentMomentum = jumpMomentum;
+            _currentMomentum = movementSO.jumpMomentum;
 
-            _horizontalVelocity = transform.forward * (_moveInput.y * _currentSpeed * jumpMomentum)
-                                + transform.right   * (_moveInput.x * _currentSpeed * jumpMomentum);
+            _horizontalVelocity = transform.forward * (_moveInput.y * _currentSpeed * movementSO.jumpMomentum)
+                                + transform.right   * (_moveInput.x * _currentSpeed * movementSO.jumpMomentum);
         }
         else if (_jumpQueued)
         {
@@ -124,11 +91,11 @@ public class CharacterMovement : MonoBehaviour
     private void HandleMovement()
     {
         float targetSpeed = (_isSprinting && _moveInput.magnitude > 0.1f)
-            ? sprintSpeed
-            : walkSpeed;
+            ? movementSO.sprintSpeed
+            : movementSO.walkSpeed;
 
         _currentSpeed = Mathf.Lerp(_currentSpeed, targetSpeed,
-            sprintAcceleration * Time.deltaTime);
+            movementSO.sprintAcceleration * Time.deltaTime);
 
         Vector3 inputDir = transform.forward * _moveInput.y
                          + transform.right   * _moveInput.x;
@@ -140,21 +107,21 @@ public class CharacterMovement : MonoBehaviour
                 _horizontalVelocity = Vector3.Lerp(
                     _horizontalVelocity,
                     inputDir.normalized * _currentSpeed,
-                    sprintAcceleration * Time.deltaTime);
+                    movementSO.sprintAcceleration * Time.deltaTime);
             }
             else
             {
                 _horizontalVelocity = Vector3.Lerp(
                     _horizontalVelocity,
                     Vector3.zero,
-                    deceleration * Time.deltaTime);
+                    movementSO.deceleration * Time.deltaTime);
             }
         }
         else
         {
             _currentMomentum = Mathf.MoveTowards(
                 _currentMomentum, 0f,
-                (jumpMomentum / momentumDecayDuration) * Time.deltaTime);
+                (movementSO.jumpMomentum / movementSO.momentumDecayDuration) * Time.deltaTime);
 
             if (_moveInput.magnitude > 0.1f && _horizontalVelocity.magnitude > 0.01f)
             {
@@ -163,7 +130,7 @@ public class CharacterMovement : MonoBehaviour
                 _horizontalVelocity = Vector3.Lerp(
                     _horizontalVelocity,
                     inputDir.normalized * (currentMagnitude * _currentMomentum),
-                    airControl);
+                    movementSO.airControl);
             }
             else
             {
